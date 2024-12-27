@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  backend-api:
+    depends_on:
+      - postgres
+    ports:
+      - ${BACKEND_PORT_INTERNAL}:${BACKEND_PORT_INTERNAL}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_PORT=${REDIS_PORT_INTERNAL}
+      - BACKEND_PORT=${BACKEND_PORT_INTERNAL}
+      - BACKEND_DEBUG=${BACKEND_DEBUG}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - DOMAIN=${DOMAIN}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./backend/:/code
+    entrypoint: ../docker-entrypoint.sh
+    command: uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT_INTERNAL} --reload --proxy-headers
+
+  postgres:
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    image: postgres:14.0-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    depends_on:
+      - postgres
+    expose:
+      - ${PGADMIN_PORT_INTERNAL}
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_LISTEN_PORT: ${PGADMIN_PORT_INTERNAL}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+  pgadmin_data:
