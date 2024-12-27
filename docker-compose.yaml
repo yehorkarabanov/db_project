@@ -49,6 +49,17 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
+  frontend:
+    build:
+        context: ./frontend
+        dockerfile: Dockerfile
+    ports:
+      - ${FRONTEND_PORT_INTERNAL}:${FRONTEND_PORT_INTERNAL}
+    volumes:
+     - ./frontend:/app
+     - /app/node_modules
+    command: "npm run dev"
+
 volumes:
   postgres_data:
   pgadmin_data:

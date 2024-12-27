@@ -12,23 +12,33 @@ CREATE TABLE IF NOT EXISTS Warehouses (
 
 CREATE TABLE IF NOT EXISTS Clients (
     id SERIAL PRIMARY KEY,
+    email VARCHAR NOT NULL,
     name VARCHAR NOT NULL,
     money FLOAT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS Orders (
+CREATE TABLE IF NOT EXISTS Worker (
     id SERIAL PRIMARY KEY,
-    client_id INT NOT NULL REFERENCES Clients(id),
-    data_arival DATE NOT NULL
+    name VARCHAR NOT NULL,
+    salary INT NOT NULL,
+    warehouse_id INT NOT NULL REFERENCES Warehouses(id) ON DELETE CASCADE,
+    supervisor_id INT REFERENCES Worker(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Product (
+CREATE TABLE IF NOT EXISTS Orders (
+    id SERIAL PRIMARY KEY,
+    client_id INT NOT NULL REFERENCES Clients(id) ON DELETE CASCADE,
+    data_arival DATE NOT NULL,
+    worker_id INT NOT NULL REFERENCES Worker(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Products (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     price FLOAT NOT NULL,
     place_taken INT NOT NULL,
-    warehouse_id INT NOT NULL REFERENCES Warehouses(id),
-    manufacturer_id INT NOT NULL REFERENCES Manufacturers(id)
+    warehouse_id INT NOT NULL REFERENCES Warehouses(id) ON DELETE CASCADE,
+    manufacturer_id INT NOT NULL REFERENCES Manufacturers(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Types (
@@ -36,31 +46,21 @@ CREATE TABLE IF NOT EXISTS Types (
     name VARCHAR NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS Worker (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL,
-    salary INT NOT NULL,
-    warehouse_id INT NOT NULL REFERENCES Warehouses(id),
-    supervisor_id INT REFERENCES Worker(id),
-    order_id INT REFERENCES Orders(id)
-);
-
 CREATE TABLE IF NOT EXISTS Product_Types (
     id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL,
-    product_id INT NOT NULL REFERENCES Product(id),
-    type_id INT NOT NULL REFERENCES Types(id)
+    product_id INT NOT NULL REFERENCES Products(id) ON DELETE CASCADE,
+    type_id INT NOT NULL REFERENCES Types(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Product_Orders (
     id SERIAL PRIMARY KEY,
     amount INT NOT NULL,
-    product_id INT NOT NULL REFERENCES Product(id),
-    order_id INT NOT NULL REFERENCES Orders(id)
+    product_id INT NOT NULL REFERENCES Products(id) ON DELETE CASCADE,
+    order_id INT NOT NULL REFERENCES Orders(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Warehouse_Types (
     id SERIAL PRIMARY KEY,
-    warehouse_id INT NOT NULL REFERENCES Warehouses(id),
-    type_id INT NOT NULL REFERENCES Types(id)
+    warehouse_id INT NOT NULL REFERENCES Warehouses(id) ON DELETE CASCADE,
+    type_id INT NOT NULL REFERENCES Types(id) ON DELETE CASCADE
 );

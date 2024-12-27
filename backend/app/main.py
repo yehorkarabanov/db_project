@@ -1,16 +1,23 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.settings import settings
+from app.data.api import router as data_router
 
-app = FastAPI()
+app = FastAPI(root_path='/api')
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(data_router)
 
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
 
 
 if __name__ == "__main__":
