@@ -165,8 +165,8 @@ const ClientOrdersPage = () => {
 
                 {/* Product Table */}
                 <Table className="mt-4 w-full">
-                  <TableBody className={"bg-gray-100"}>
-                    <TableRow>
+                  <TableBody className={"font-bold"} >
+                    <TableRow className={"pointer-events-none"}>
                       <TableCell>Product Name</TableCell>
                       <TableCell>Price</TableCell>
                       <TableCell>Amount</TableCell>
