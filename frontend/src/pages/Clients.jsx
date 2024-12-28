@@ -19,8 +19,13 @@ const ClientsPage = () => {
                 return response.json();
             })
             .then((data) => {
-                setClients(data);
-                setLoading(false);
+                if(Array.isArray(data) && data.length) {
+                    setClients(data);
+                    setLoading(false);
+                }else{
+                    setError("no clients data found");
+                    setLoading(false);
+                }
             })
             .catch((err) => {
                 setError(err.message);
@@ -33,7 +38,13 @@ const ClientsPage = () => {
     }
 
     if (error) {
-        return <p>Error: {error}</p>;
+        return (
+            <div className="text-center mt-20">
+                <p className="text-5xl">😞</p>
+                <p className="text-2xl font-semibold mt-4">Sorry, {error}.</p>
+                <Button onClick={()=>{navigate("/")}} className="mt-4">Go Back</Button>
+            </div>
+        );
     }
 
     return (
@@ -43,12 +54,12 @@ const ClientsPage = () => {
             {/* Clients Table */}
             <Table className="mt-4 w-full">
                 <TableHeader>
-                    <TableRow>
+                    <TableRow className={"pointer-events-none"}>
                         <TableCell>Client ID</TableCell>
                         <TableCell>Email</TableCell>
                         <TableCell>Client Name</TableCell>
                         <TableCell>Client Balance</TableCell>
-                        <TableCell>Total Order Amount</TableCell>
+                        <TableCell>Total Orders Amount</TableCell>
                         <TableCell>Number of Orders</TableCell>
                     </TableRow>
                 </TableHeader>

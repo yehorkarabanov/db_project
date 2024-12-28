@@ -7,7 +7,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import {Accordion, AccordionItem, AccordionTrigger, AccordionContent} from "@/components/ui/accordion";
-import {Table, TableBody, TableCell, TableRow} from "@/components/ui/table";
+import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
 import ProductModal from "@/components/ProductModal.jsx";
 import {Button} from "@/components/ui/button";
 import {useNavigate} from "react-router-dom"; // Import useNavigate for redirection
@@ -122,7 +122,7 @@ const ClientOrdersPage = () => {
 
                                 {/* Product Table */}
                                 <Table className="mt-4 w-full">
-                                    <TableBody>
+                                    <TableHeader>
                                         <TableRow className={"pointer-events-none"}>
                                             <TableCell>Product Name</TableCell>
                                             <TableCell>Price</TableCell>
@@ -130,6 +130,8 @@ const ClientOrdersPage = () => {
                                             <TableCell>Manufacturer</TableCell>
                                             <TableCell>Warehouse Location</TableCell>
                                         </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
                                         {order.products?.map((product, index) => (
                                             <TableRow
                                                 key={index}
