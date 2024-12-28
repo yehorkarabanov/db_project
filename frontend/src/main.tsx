@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import "./index.css"
 import MainPage from "@/pages/MainPage";
 import ClientOrdersPage from "@/pages/ClienOrderPage";
+import Clients from "@/pages/Clients";
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
@@ -12,6 +13,7 @@ createRoot(document.getElementById('root')!).render(
             <Routes>
                 <Route path="/" element={<MainPage/>}/>
                 <Route path="/orders" element={<ClientOrdersPage/>}/>
+                <Route path="/clients" element={<Clients/>}/>
             </Routes>
         </BrowserRouter>
     </StrictMode>,
