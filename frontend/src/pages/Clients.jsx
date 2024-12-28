@@ -2,6 +2,7 @@ import React, {useState, useEffect} from "react";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table"; // Assuming you have a table component
 import {Button} from "@/components/ui/button";
 import {useNavigate} from "react-router-dom"; // Assuming you have a button component
+import {NavLink} from "react-router";
 
 const ClientsPage = () => {
     const navigate = useNavigate();
@@ -19,10 +20,10 @@ const ClientsPage = () => {
                 return response.json();
             })
             .then((data) => {
-                if(Array.isArray(data) && data.length) {
+                if (Array.isArray(data) && data.length) {
                     setClients(data);
                     setLoading(false);
-                }else{
+                } else {
                     setError("no clients data found");
                     setLoading(false);
                 }
@@ -42,7 +43,9 @@ const ClientsPage = () => {
             <div className="text-center mt-20">
                 <p className="text-5xl">😞</p>
                 <p className="text-2xl font-semibold mt-4">Sorry, {error}.</p>
-                <Button onClick={()=>{navigate("/")}} className="mt-4">Go Back</Button>
+                <Button onClick={() => {
+                    navigate("/")
+                }} className="mt-4">Go Back</Button>
             </div>
         );
     }
@@ -61,6 +64,7 @@ const ClientsPage = () => {
                         <TableCell>Client Balance</TableCell>
                         <TableCell>Total Orders Amount</TableCell>
                         <TableCell>Number of Orders</TableCell>
+                        <TableCell>Order Details</TableCell>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -72,13 +76,18 @@ const ClientsPage = () => {
                             <TableCell>${client.client_balance.toFixed(2)}</TableCell>
                             <TableCell>${client.total_order_amount.toFixed(2)}</TableCell>
                             <TableCell>{client.number_of_orders}</TableCell>
+                            <TableCell><Button onClick={() => {
+                                navigate(`/orders?email=${client.email}`)
+                            }}>Details</Button></TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
 
             {/* Back Button */}
-            <Button className="mt-4" onClick={()=>{navigate("/")}}>Go Back</Button>
+            <Button className="mt-4" onClick={() => {
+                navigate("/")
+            }}>Go Back</Button>
         </div>
     );
 };
