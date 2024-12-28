@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
 import {
   Card,
   CardContent,
@@ -13,6 +14,13 @@ import { Label } from "@/components/ui/label";
 const MainPage = () => {
   const [email, setEmail] = useState("");
   const [product, setProduct] = useState("");
+  const navigate = useNavigate(); // Hook for redirection
+
+  // Function to validate email format
+  const isValidEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return emailRegex.test(email);
+  };
 
   const handleFindProduct = () => {
     console.log("Finding product for:", product);
@@ -20,13 +28,18 @@ const MainPage = () => {
   };
 
   const handleSeeOrders = () => {
-    console.log("Fetching orders for:", email);
-    // Add logic for fetching orders by email
+    if (isValidEmail(email)) {
+      // If email is valid, redirect to the orders page with the email as query parameter
+      navigate(`/orders?email=${encodeURIComponent(email)}`);
+    } else {
+      // If email is invalid, show an alert or some message
+      alert("Please enter a valid email address.");
+    }
   };
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Product and Orders</h1>
+      <h1 className="text-2xl font-bold mb-6">Main page</h1>
 
       {/* Product Search Card */}
       <Card className="mb-4">
