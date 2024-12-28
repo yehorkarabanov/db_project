@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.db_helper import db_helper
-from app.database.models import Orders
+from app.database.models import Orders, Clients
 
 router = APIRouter(prefix="/data", tags=["data"])
 
@@ -10,3 +10,9 @@ router = APIRouter(prefix="/data", tags=["data"])
 async def orders_by_mail(email: str, session: AsyncSession = Depends(db_helper.session_dependency)):
     query = Orders.get_orders_by_mail(email)
     return await Orders.execute(query, session)
+
+
+@router.get("/clients")
+async def get_clients(session: AsyncSession = Depends(db_helper.session_dependency)):
+    query = Clients.get_clients_info()
+    return await Clients.execute(query, session)

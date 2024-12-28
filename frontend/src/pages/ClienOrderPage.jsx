@@ -9,12 +9,13 @@ import {
 import {Accordion, AccordionItem, AccordionTrigger, AccordionContent} from "@/components/ui/accordion";
 import {Table, TableBody, TableCell, TableRow} from "@/components/ui/table";
 import ProductModal from "@/components/ProductModal.jsx";
-import {NavLink} from "react-router";
-import {Separator} from "@/components/ui/separator"
+import {Button} from "@/components/ui/button";
+import {useNavigate} from "react-router-dom"; // Import useNavigate for redirection
 
 const ClientOrdersPage = () => {
     const [searchParams] = useSearchParams();
     const email = searchParams.get("email");
+    const navigate = useNavigate();
 
     const [clientData, setClientData] = useState(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -35,7 +36,7 @@ const ClientOrdersPage = () => {
                     if (Array.isArray(data) && data.length > 0 && data[0]?.client_data) {
                         setClientData(data[0].client_data);
                     } else {
-                        throw new Error("Invalid response format");
+                        setClientData(null); // Ensure we handle no data scenario
                     }
                     setLoading(false);
                 })
@@ -67,8 +68,18 @@ const ClientOrdersPage = () => {
         return <p>Error: {error}</p>;
     }
 
+    const handleBack = () => {
+        navigate(`/`);
+    };
+
     if (!clientData) {
-        return <p>No client data available.</p>;
+        return (
+            <div className="text-center mt-20">
+                <p className="text-5xl">😞</p>
+                <p className="text-2xl font-semibold mt-4">Sorry, we couldn't find any orders for this email.</p>
+                <Button onClick={handleBack} className="mt-4">Go Back</Button>
+            </div>
+        );
     }
 
     return (
@@ -112,7 +123,7 @@ const ClientOrdersPage = () => {
                                 {/* Product Table */}
                                 <Table className="mt-4 w-full">
                                     <TableBody>
-                                        <TableRow>
+                                        <TableRow className={"pointer-events-none"}>
                                             <TableCell>Product Name</TableCell>
                                             <TableCell>Price</TableCell>
                                             <TableCell>Amount</TableCell>
@@ -142,6 +153,7 @@ const ClientOrdersPage = () => {
 
             {/* Product Modal */}
             <ProductModal product={selectedProduct} isOpen={isModalOpen} onClose={closeModal}/>
+            <Button onClick={handleBack} className="mt-4">Go Back</Button>
         </div>
     );
 };
