@@ -20,6 +20,8 @@ class Base(BaseModel):
         rows = res.fetchall()
         columns = res.keys()
         data = [dict(zip(columns, row)) for row in rows]
+        if len(data) == 1:
+            return data[0]
         return data
 
     @classmethod
@@ -50,13 +52,6 @@ class Manufacturers(Base):
 class Warehouses(Base):
     location: str
     capacity: int
-
-
-class Worker(Base):
-    name: str
-    salary: int
-    warehouse_id: int
-    supervisor_id: int | None
 
 
 class Products(Base):

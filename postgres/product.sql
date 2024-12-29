@@ -1,86 +1,70 @@
-WITH OrderProducts AS (
-    -- First aggregate products with their manufacturers and types
-    SELECT po.order_id,
-           JSON_AGG(
-                   JSON_BUILD_OBJECT(
-                           'product_name', p.name,
-                           'product_price', p.price,
-                           'product_amount', po.amount,
-                           'manufacturer', JSON_BUILD_OBJECT(
-                                   'name', m.name,
-                                   'country', m.country
-                                           ),
-                           'types', (SELECT JSON_AGG(t.name)
-                                     FROM Product_Types pt
-                                              JOIN Types t ON pt.type_id = t.id
-                                     WHERE pt.product_id = p.id)
-                   )
-           ) AS products
-    FROM Product_Orders po
-             JOIN
-         Products p ON po.product_id = p.id
-             JOIN
-         Manufacturers m ON p.manufacturer_id = m.id
-    GROUP BY po.order_id),
-     OrderDetails AS (
-         -- Then aggregate orders with their products and worker info
-         SELECT o.client_id,
-                JSON_AGG(
-                        JSON_BUILD_OBJECT(
-                                'order_id', o.id,
-                                'order_date', o.data_arival,
-                                'worker', JSON_BUILD_OBJECT(
-                                        'name', w.name,
-                                        'salary', w.salary,
-                                        'supervisor', (SELECT JSON_BUILD_OBJECT(
-                                                                      'name', w2.name,
-                                                                      'salary', w2.salary
-                                                              )
-                                                       FROM Worker w2
-                                                       WHERE w2.id = w.supervisor_id)
-                                          ),
-                                'products', op.products
+WITH RECURSIVE Subordinates AS (
+    -- Get the worker and their immediate subordinates
+    SELECT
+        w.id,
+        w.name,
+        w.salary,
+        w.warehouse_id,
+        w.supervisor_id
+    FROM Worker w
+    WHERE w.supervisor_id IS NOT NULL
+
+    UNION ALL
+
+    -- Recursively get subordinates of subordinates
+    SELECT
+        w.id,
+        w.name,
+        w.salary,
+        w.warehouse_id,
+        w.supervisor_id
+    FROM Worker w
+    INNER JOIN Subordinates s ON w.supervisor_id = s.id
+),
+OrderCount AS (
+    -- Get the count of orders for each worker
+    SELECT
+        worker_id,
+        COUNT(*) AS order_count
+    FROM Orders
+    GROUP BY worker_id
+)
+SELECT
+    w.id,
+    w.name,
+    w.salary,
+    w.warehouse_id,
+    w.supervisor_id,
+    COALESCE(oc.order_count, 0) AS order_count,
+    -- Use json_build_object to create a nested structure for subordinates
+    COALESCE(
+        json_agg(
+            json_build_object(
+                'id', s.id,
+                'name', s.name,
+                'salary', s.salary,
+                'warehouse_id', s.warehouse_id,
+                'order_count', oc_sub.order_count,
+                'subordinates', (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', ss.id,
+                            'name', ss.name,
+                            'salary', ss.salary,
+                            'warehouse_id', ss.warehouse_id,
+                            'order_count', oc_sub_sub.order_count
                         )
-                ) AS orders
-         FROM Orders o
-                  JOIN
-              OrderProducts op ON o.id = op.order_id
-                  JOIN
-              Worker w ON o.worker_id = w.id
-         GROUP BY o.client_id),
-     WarehouseTypes AS (
-         -- Get warehouse types
-         SELECT w.id             AS warehouse_id,
-                JSON_AGG(t.name) AS types
-         FROM Warehouses w
-                  JOIN
-              Warehouse_Types wt ON w.id = wt.warehouse_id
-                  JOIN
-              Types t ON wt.type_id = t.id
-         GROUP BY w.id)
-SELECT JSON_BUILD_OBJECT(
-               'client_info', JSON_BUILD_OBJECT(
-                'email', c.email,
-                'name', c.name,
-                'money', c.money
-                              ),
-               'warehouse_info', JSON_BUILD_OBJECT(
-                       'location', wh.location,
-                       'capacity', wh.capacity,
-                       'types', COALESCE(wt.types, '[]'::json)
-                                 ),
-               'orders', od.orders
-       ) AS client_data
-FROM Clients c
-         JOIN
-     Orders o ON c.id = o.client_id
-         JOIN
-     Worker w ON o.worker_id = w.id
-         JOIN
-     Warehouses wh ON w.warehouse_id = wh.id
-         LEFT JOIN
-     WarehouseTypes wt ON wh.id = wt.warehouse_id
-         JOIN
-     OrderDetails od ON c.id = od.client_id
-WHERE c.email = 'john.doe@example.com'
-LIMIT 1;
+                    )
+                    FROM Worker ss
+                    LEFT JOIN OrderCount oc_sub_sub ON ss.id = oc_sub_sub.worker_id
+                    WHERE ss.supervisor_id = s.id
+                )
+            )
+        ) FILTER (WHERE s.supervisor_id = w.id), '[]'
+    ) AS subordinates
+FROM Worker w
+LEFT JOIN OrderCount oc ON w.id = oc.worker_id
+LEFT JOIN Subordinates s ON w.id = s.supervisor_id
+LEFT JOIN OrderCount oc_sub ON s.id = oc_sub.worker_id
+GROUP BY w.id, w.name, w.salary, w.warehouse_id, w.supervisor_id, oc.order_count
+ORDER BY w.id;

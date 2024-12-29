@@ -44,7 +44,7 @@ const ClientsPage = () => {
                 <p className="text-5xl">😞</p>
                 <p className="text-2xl font-semibold mt-4">Sorry, {error}.</p>
                 <Button onClick={() => {
-                    navigate("/")
+                    navigate(-1)
                 }} className="mt-4">Go Back</Button>
             </div>
         );
@@ -75,10 +75,13 @@ const ClientsPage = () => {
                             <TableCell>{client.client_name}</TableCell>
                             <TableCell>${client.client_balance.toFixed(2)}</TableCell>
                             <TableCell>${client.total_order_amount.toFixed(2)}</TableCell>
-                            <TableCell>{client.number_of_orders}</TableCell>
-                            <TableCell><Button onClick={() => {
-                                navigate(`/orders?email=${client.email}`)
-                            }}>Details</Button></TableCell>
+                            <TableCell>{client.number_of_orders	}</TableCell>
+                            <TableCell><Button
+                                disabled={client.number_of_orders == 0}
+                                onClick={() => {
+                                    navigate(`/orders?email=${client.email}`)
+                                }}
+                            >Details</Button></TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -86,7 +89,7 @@ const ClientsPage = () => {
 
             {/* Back Button */}
             <Button className="mt-4" onClick={() => {
-                navigate("/")
+                navigate(-1)
             }}>Go Back</Button>
         </div>
     );

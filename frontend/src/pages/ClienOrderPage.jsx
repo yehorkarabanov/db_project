@@ -33,8 +33,8 @@ const ClientOrdersPage = () => {
                     return response.json();
                 })
                 .then((data) => {
-                    if (Array.isArray(data) && data.length > 0 && data[0]?.client_data) {
-                        setClientData(data[0].client_data);
+                    if (data.client_data.orders.length > 0) {
+                        setClientData(data.client_data);
                     } else {
                         setClientData(null); // Ensure we handle no data scenario
                     }
@@ -69,7 +69,7 @@ const ClientOrdersPage = () => {
     }
 
     const handleBack = () => {
-        navigate(`/`);
+        navigate(-1);
     };
 
     if (!clientData) {
