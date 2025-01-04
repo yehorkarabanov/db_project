@@ -54,12 +54,6 @@ class Warehouses(Base):
     capacity: int
 
 
-class Products(Base):
-    name: str
-    price: float
-    place_taken: int
-    warehouse_id: int
-    manufacturer_id: int
 
 
 class Types(Base):

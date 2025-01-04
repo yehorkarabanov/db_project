@@ -23,7 +23,7 @@ const MainPage = () => {
     };
 
     const handleFindProduct = () => {
-        console.log("Finding product for:", product);
+        navigate(`/product/${encodeURIComponent(product)}`);
         // Add logic for finding the product
     };
 
@@ -68,7 +68,8 @@ const MainPage = () => {
                                 placeholder="Enter product name"
                             />
                         </div>
-                        <Button onClick={handleFindProduct}>Find Product</Button>
+                        <Button onClick={handleFindProduct} className={"mr-4"}>Find Product</Button>
+                        <Button onClick={() => navigate("/products")}>View All Products</Button>
                     </div>
                 </CardContent>
             </Card>

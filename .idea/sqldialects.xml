@@ -4,6 +4,5 @@
     <file url="file://$PROJECT_DIR$/backend/app/database/models/workers.py" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/postgres/init.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/postgres/moredata.sql" dialect="PostgreSQL" />
-    <file url="file://$PROJECT_DIR$/postgres/product.sql" dialect="PostgreSQL" />
   </component>
 </project>

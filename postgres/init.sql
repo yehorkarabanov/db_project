@@ -21,15 +21,15 @@ CREATE TABLE IF NOT EXISTS Worker (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     salary INT NOT NULL,
-    warehouse_id INT NOT NULL REFERENCES Warehouses(id) ON DELETE CASCADE,
-    supervisor_id INT REFERENCES Worker(id) ON DELETE CASCADE
+    warehouse_id INT REFERENCES Warehouses(id) ON DELETE SET NULL,
+    supervisor_id INT REFERENCES Worker(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS Orders (
     id SERIAL PRIMARY KEY,
     client_id INT NOT NULL REFERENCES Clients(id) ON DELETE CASCADE,
     data_arival DATE NOT NULL,
-    worker_id INT NOT NULL REFERENCES Worker(id) ON DELETE CASCADE
+    worker_id INT  REFERENCES Worker(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS Products (
