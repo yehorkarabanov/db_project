@@ -12,6 +12,12 @@ async def orders_by_mail(email: str, session: AsyncSession = Depends(db_helper.s
     return await Orders.execute(query, session)
 
 
+@router.get("/orders")
+async def get_orders(session: AsyncSession = Depends(db_helper.session_dependency)):
+    query = Orders.get_orders()
+    return await Orders.execute(query, session)
+
+
 @router.get("/clients")
 async def get_clients(session: AsyncSession = Depends(db_helper.session_dependency)):
     query = Clients.get_clients_info()
@@ -34,3 +40,4 @@ async def get_product(product_name: str, session: AsyncSession = Depends(db_help
 async def get_products(session: AsyncSession = Depends(db_helper.session_dependency)):
     query = Products.get_products()
     return await Products.execute(query, session)
+

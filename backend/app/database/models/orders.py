@@ -83,3 +83,24 @@ class Orders(Base):
                     c.email = '{email}'
                 LIMIT 1;
                 """
+
+    @classmethod
+    def get_orders(cls):
+        return """
+            SELECT
+                o.id,
+                o.data_arival,
+                w.name AS worker_name,
+                c.name AS client_name,
+                c.email AS client_email,
+                COALESCE(
+                    ARRAY_AGG(p.name) FILTER (WHERE p.name IS NOT NULL),
+                    '{}'
+                ) AS products
+            FROM Orders o
+            LEFT JOIN Workers w ON o.worker_id = w.id
+            LEFT JOIN Clients c ON o.client_id = c.id
+            LEFT JOIN Product_Orders po ON o.id = po.order_id
+            LEFT JOIN Products p ON po.product_id = p.id
+            GROUP BY o.id, w.name, c.name, p.name;
+        """
