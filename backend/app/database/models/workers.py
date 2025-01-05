@@ -10,7 +10,7 @@ class Workers(Base):
     @classmethod
     def get_workers(cls):
         return """
-            WITH RECURSIVE worker_hierarchy AS (
+            WITH RECURSIVE workers_hierarchy AS (
                 -- Base case: select workers who are supervisors
                 SELECT 
                     w.id,
@@ -20,7 +20,7 @@ class Workers(Base):
                     w.supervisor_id,
                     1 as level,
                     (SELECT COUNT(*) FROM Orders o WHERE o.worker_id = w.id) as orders_count
-                FROM Worker w
+                FROM Workers w
                 WHERE w.supervisor_id IS NULL  -- Start with top-level supervisors
             
                 UNION ALL
@@ -34,8 +34,8 @@ class Workers(Base):
                     w.supervisor_id,
                     wh.level + 1,
                     (SELECT COUNT(*) FROM Orders o WHERE o.worker_id = w.id) as orders_count
-                FROM Worker w
-                INNER JOIN worker_hierarchy wh ON w.supervisor_id = wh.id
+                FROM Workers w
+                INNER JOIN workers_hierarchy wh ON w.supervisor_id = wh.id
             )
             SELECT json_build_object(
                 'workers', (
@@ -60,14 +60,14 @@ class Workers(Base):
                                             orders_count,
                                             (
                                                 SELECT COALESCE(jsonb_agg(to_jsonb(subsub) - 'supervisor_id'), '[]'::jsonb)
-                                                FROM worker_hierarchy subsub
+                                                FROM workers_hierarchy subsub
                                                 WHERE subsub.supervisor_id = sub.id
                                             ) as subordinates
-                                        FROM worker_hierarchy sub
+                                        FROM workers_hierarchy sub
                                         WHERE sub.supervisor_id = w.id
                                     ) sub
                                 ) as subordinates
-                            FROM worker_hierarchy w
+                            FROM workers_hierarchy w
                             WHERE w.supervisor_id IS NULL
                         )
                         SELECT * FROM json_tree

@@ -173,7 +173,7 @@ const ProductList = () => {
                                             <Button
                                                 variant="outline"
                                                 className="w-full mt-4"
-                                                onClick={() => navigate(`/product/${encodeURIComponent(product.product_name)}`)}
+                                                onClick={() => navigate(`/products/${encodeURIComponent(product.product_name)}`)}
                                             >
                                                 View Details
                                             </Button>

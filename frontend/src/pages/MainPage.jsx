@@ -37,7 +37,7 @@ const MainPage = () => {
             openModal("Error", "Product name cannot be empty.");
             return;
         }
-        navigate(`/product/${encodeURIComponent(product)}`);
+        navigate(`/products/${encodeURIComponent(product)}`);
     };
 
     const handleSeeOrders = () => {

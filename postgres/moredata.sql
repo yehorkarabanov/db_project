@@ -29,7 +29,7 @@ INSERT INTO Clients (email, name, money) VALUES
 ('susan.kim@example.com', 'Susan Kim', 7200.00);
 
 -- Insert Workers
-INSERT INTO Worker (name, salary, warehouse_id, supervisor_id) VALUES
+INSERT INTO Workers (name, salary, warehouse_id, supervisor_id) VALUES
 ('Tom Hardy', 4000, 1, NULL),
 ('Emily Blunt', 4500, 2, NULL),
 ('Chris Pratt', 3500, 3, NULL),

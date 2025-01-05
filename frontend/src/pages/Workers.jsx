@@ -187,7 +187,7 @@ const WorkersPage = () => {
                         Back
                     </Button>
                     <Button
-                        onClick={() => {/* Add new worker logic */}}
+                        onClick={() => {navigate('/workers/new')}}
                         className="bg-blue-600 hover:bg-blue-700"
                     >
                         <Plus className="h-4 w-4 mr-2" />

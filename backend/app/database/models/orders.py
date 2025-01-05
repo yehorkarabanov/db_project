@@ -8,7 +8,8 @@ class Orders(Base):
 
     @classmethod
     def get_orders_by_mail(cls, email):
-        return f"""WITH OrderProducts AS (
+        return f"""
+                WITH OrderProducts AS (
                     -- First aggregate products with their manufacturers and types
                     SELECT 
                         po.order_id,
@@ -62,7 +63,7 @@ class Orders(Base):
                     JOIN 
                         OrderProducts op ON o.id = op.order_id
                     JOIN 
-                        Worker w ON o.worker_id = w.id
+                        Workers w ON o.worker_id = w.id
                     GROUP BY 
                         o.client_id
                 )
@@ -102,5 +103,5 @@ class Orders(Base):
             LEFT JOIN Clients c ON o.client_id = c.id
             LEFT JOIN Product_Orders po ON o.id = po.order_id
             LEFT JOIN Products p ON po.product_id = p.id
-            GROUP BY o.id, w.name, c.name, p.name;
+            GROUP BY o.id, w.name, c.name, c.email;
         """

@@ -35,7 +35,7 @@ const ProductInfo = () => {
         setLoading(true);
 
         axios
-            .get(`http://localhost:8080/api/data/product/${encodedProductName}`)
+            .get(`http://localhost:8080/api/data/products/${encodedProductName}`)
             .then((response) => {
                 setProductData(response.data.product_details);
                 setError(null);

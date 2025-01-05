@@ -30,7 +30,7 @@ async def get_workers(session: AsyncSession = Depends(db_helper.session_dependen
     return await Workers.execute(query, session)
 
 
-@router.get("/product/{product_name}")
+@router.get("/products/{product_name}")
 async def get_product(product_name: str, session: AsyncSession = Depends(db_helper.session_dependency)):
     query = Products.get_product_by_name(product_name)
     return await Products.execute(query, session)

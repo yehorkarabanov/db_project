@@ -118,7 +118,7 @@ const OrderCard = ({order, expanded, onToggle}) => {
                                     <TableBody>
                                         {order.products?.map((product, index) => (
                                             <TableRow onClick={() => {
-                                                navigate(`/product/${product.product_name}`)
+                                                navigate(`/products/${product.product_name}`)
                                             }}
                                                       key={index}
                                                       className="cursor-pointer hover:bg-gray-50 transition-colors"
