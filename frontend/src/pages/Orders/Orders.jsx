@@ -6,9 +6,9 @@ import {
     TableCell,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
+} from "@/components/ui/table.tsx";
+import {Input} from "@/components/ui/input.tsx";
+import {Button} from "@/components/ui/button.tsx";
 import {useNavigate} from "react-router-dom";
 import {
     Package,
@@ -27,7 +27,7 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card.tsx";
 
 const OrdersPage = () => {
     const navigate = useNavigate();
@@ -44,7 +44,7 @@ const OrdersPage = () => {
     });
 
     useEffect(() => {
-        axios.get("http://localhost:8080/api/data/orders")
+        axios.get("http://localhost:8080/api/orders")
             .then((response) => {
                 if (Array.isArray(response.data) && response.data.length) {
                     setOrders(response.data);

@@ -7,11 +7,11 @@ import {
     CardHeader,
     CardTitle,
     CardDescription
-} from "@/components/ui/card";
-import {Accordion, AccordionItem, AccordionTrigger, AccordionContent} from "@/components/ui/accordion";
-import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
+} from "@/components/ui/card.tsx";
+import {Accordion, AccordionItem, AccordionTrigger, AccordionContent} from "@/components/ui/accordion.tsx";
+import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {Input} from "@/components/ui/input.tsx";
 import {
     Package,
     User,
@@ -159,7 +159,7 @@ const ClientOrdersPage = () => {
 
     useEffect(() => {
         if (email) {
-            fetch(`http://localhost:8080/api/data/orders_by_mail/${email}`)
+            fetch(`http://localhost:8080/api/orders/${email}`)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error("Failed to fetch client data");

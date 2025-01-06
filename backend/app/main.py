@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.settings import settings
-from app.data.api import router as data_router
+from app.products.api import router as products_router
+from app.orders.api import router as orders_router
+from app.clients.api import router as clients_router
+from app.workers.api import router as workers_router
 
 app = FastAPI(root_path='/api')
 app.add_middleware(
@@ -12,7 +15,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(data_router)
+app.include_router(products_router)
+app.include_router(orders_router)
+app.include_router(clients_router)
+app.include_router(workers_router)
 
 
 @app.get("/")

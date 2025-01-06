@@ -6,9 +6,9 @@ import {
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/card.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { useNavigate } from "react-router-dom";
 import {
     Users,
@@ -142,7 +142,7 @@ const WorkersPage = () => {
 
     useEffect(() => {
         setLoading(true);
-        axios.get('http://localhost:8080/api/data/workers')
+        axios.get('http://localhost:8080/api/workers')
             .then((response) => {
                 setWorkers(response.data.json_build_object.workers);
                 setError(null);

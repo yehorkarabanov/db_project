@@ -5,9 +5,9 @@ import {
     TableCell,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/table.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { useNavigate } from "react-router-dom";
 import {
     Users,
@@ -27,7 +27,7 @@ import {
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card.tsx";
 
 const ClientsPage = () => {
     const navigate = useNavigate();
@@ -44,7 +44,7 @@ const ClientsPage = () => {
     });
 
     useEffect(() => {
-        fetch("http://localhost:8080/api/data/clients")
+        fetch("http://localhost:8080/api/clients")
             .then((response) => {
                 if (!response.ok) throw new Error("Failed to fetch clients data");
                 return response.json();

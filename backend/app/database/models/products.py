@@ -85,3 +85,39 @@ class Products(Base):
             GROUP BY 
                 p.id, m.name, m.country;
         """
+
+    @classmethod
+    def get_data_for_creation(cls):
+        return """
+                SELECT json_build_object(
+                    'manufacturers', (
+                        SELECT json_agg(
+                            json_build_object(
+                                'id', m.id,
+                                'name', m.name,
+                                'country', m.country
+                            )
+                        )
+                        FROM Manufacturers m
+                    ),
+                    'warehouses', (
+                        SELECT json_agg(
+                            json_build_object(
+                                'id', w.id,
+                                'location', w.location,
+                                'capacity', w.capacity
+                            )
+                        )
+                        FROM Warehouses w
+                    ),
+                    'types', (
+                        SELECT json_agg(
+                            json_build_object(
+                                'id', t.id,
+                                'name', t.name
+                            )
+                        )
+                        FROM Types t
+                    )
+                ) AS result;
+        """

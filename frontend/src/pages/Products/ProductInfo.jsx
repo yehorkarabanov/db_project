@@ -7,9 +7,9 @@ import {
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/card.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
     Package,
     Factory,
@@ -35,7 +35,7 @@ const ProductInfo = () => {
         setLoading(true);
 
         axios
-            .get(`http://localhost:8080/api/data/products/${encodedProductName}`)
+            .get(`http://localhost:8080/api/products/${encodedProductName}`)
             .then((response) => {
                 setProductData(response.data.product_details);
                 setError(null);

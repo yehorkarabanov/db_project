@@ -6,9 +6,9 @@ import {
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/card.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { useNavigate } from "react-router-dom";
 import {
     Package,
@@ -33,7 +33,7 @@ const ProductList = () => {
     useEffect(() => {
         setLoading(true);
         axios
-            .get("http://localhost:8080/api/data/products")
+            .get("http://localhost:8080/api/products")
             .then((response) => {
                 setProducts(response.data);
                 // Extract all unique product types
