@@ -121,3 +121,16 @@ class Products(Base):
                     )
                 ) AS result;
         """
+
+    @classmethod
+    def create_query(cls, product_data):
+        return f"""
+                WITH new_product AS (
+                    INSERT INTO Products (name, price, place_taken, warehouse_id, manufacturer_id)
+                    VALUES ('{product_data.name}', {product_data.price}, {product_data.place_taken}, {product_data.warehouse_id}, {product_data.manufacturer_id})
+                    RETURNING id
+                )
+                INSERT INTO Product_Types (product_id, type_id)
+                SELECT new_product.id, unnest(ARRAY[{', '.join(str(x) for x in product_data.types)}])
+                FROM new_product;
+        """
