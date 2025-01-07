@@ -17,13 +17,24 @@ import {
     Tag,
     Loader2,
     AlertCircle,
+    Plus,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 const ProductCreation = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [typeError, setTypeError] = useState("");
+    const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
+    const [newType, setNewType] = useState({ name: "" });
     const [formData, setFormData] = useState({
         name: "",
         price: "",
@@ -77,7 +88,25 @@ const ProductCreation = () => {
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handleNewTypeSubmit = async (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent event from bubbling up to product form
+        setTypeError("");
+
+        try {
+            const response = await axios.post("http://localhost:8080/api/types/", newType);
+            setFormOptions(prev => ({
+                ...prev,
+                types: [...prev.types, response.data]
+            }));
+            setNewType({ name: "" });
+            setIsTypeDialogOpen(false);
+        } catch (err) {
+            setTypeError("Failed to create new type. Please try again.");
+        }
+    };
+
+    const handleProductSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError("");
@@ -122,7 +151,7 @@ const ProductCreation = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleProductSubmit} className="space-y-6">
                             {error && (
                                 <Alert variant="destructive" className="mb-6">
                                     <AlertCircle className="h-4 w-4" />
@@ -215,10 +244,57 @@ const ProductCreation = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-2 flex items-center">
-                                        <Tag className="h-4 w-4 mr-2" />
-                                        Product Types
-                                    </label>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="text-sm font-medium flex items-center">
+                                            <Tag className="h-4 w-4 mr-2" />
+                                            Product Types
+                                        </label>
+                                        <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex items-center"
+                                                >
+                                                    <Plus className="h-4 w-4 mr-2" />
+                                                    Add Type
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent onClick={(e) => e.stopPropagation()}>
+                                                <DialogHeader>
+                                                    <DialogTitle>Add New Product Type</DialogTitle>
+                                                </DialogHeader>
+                                                <div className="py-4">
+                                                    {typeError && (
+                                                        <Alert variant="destructive" className="mb-4">
+                                                            <AlertCircle className="h-4 w-4" />
+                                                            <AlertDescription>{typeError}</AlertDescription>
+                                                        </Alert>
+                                                    )}
+                                                    <form onSubmit={handleNewTypeSubmit} className="space-y-4">
+                                                        <div>
+                                                            <label className="block text-sm font-medium mb-2">
+                                                                Type Name
+                                                            </label>
+                                                            <Input
+                                                                value={newType.name}
+                                                                onChange={(e) => setNewType({ name: e.target.value })}
+                                                                placeholder="Enter type name"
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            type="submit"
+                                                            className="w-full bg-blue-600 hover:bg-blue-700"
+                                                        >
+                                                            Create Type
+                                                        </Button>
+                                                    </form>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                         {formOptions.types.map((type) => (
                                             <label
