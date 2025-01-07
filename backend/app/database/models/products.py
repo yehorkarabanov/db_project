@@ -141,3 +141,98 @@ class Products(Base):
             DELETE FROM Products
             WHERE name = '{name}';
         """
+
+    @classmethod
+    def data_for_edit_query(cls, name):
+        return f"""
+                WITH TypesList AS (
+                    SELECT
+                        pt.product_id,
+                        json_agg(
+                            json_build_object(
+                                'type_id', t.id,
+                                'type_name', t.name
+                            )
+                        ) as types
+                    FROM Product_Types pt
+                    JOIN Types t ON t.id = pt.type_id
+                    GROUP BY pt.product_id
+                )
+                SELECT json_build_object(
+                    'product_details', json_build_object(
+                        'product', json_build_object(
+                            'id', p.id,
+                            'name', p.name,
+                            'price', p.price,
+                            'place_taken', p.place_taken
+                        ),
+                        'manufacturer', json_build_object(
+                            'id', m.id,
+                            'name', m.name,
+                            'country', m.country
+                        ),
+                        'warehouse', json_build_object(
+                            'id', w.id,
+                            'location', w.location,
+                            'capacity', w.capacity
+                        ),
+                        'types', COALESCE(t.types, '[]'::json)
+                    ),
+                    'manufacturers', (
+                        SELECT json_agg(
+                            json_build_object(
+                                'id', m.id,
+                                'name', m.name,
+                                'country', m.country
+                            )
+                        )
+                        FROM Manufacturers m
+                    ),
+                    'warehouses', (
+                        SELECT json_agg(
+                            json_build_object(
+                                'id', w.id,
+                                'location', w.location,
+                                'capacity', w.capacity
+                            )
+                        )
+                        FROM Warehouses w
+                    ),
+                    'types_list', (
+                        SELECT json_agg(
+                            json_build_object(
+                                'id', t.id,
+                                'name', t.name
+                            )
+                        )
+                        FROM Types t
+                    )
+                ) AS result
+                FROM Products p
+                JOIN Manufacturers m ON m.id = p.manufacturer_id
+                JOIN Warehouses w ON w.id = p.warehouse_id
+                LEFT JOIN TypesList t ON t.product_id = p.id
+                WHERE p.name = '{name}';
+        """
+
+    @classmethod
+    def edit_query(cls, name, product_data):
+        return f"""
+                WITH updated_product AS (
+                    UPDATE Products
+                    SET name = '{product_data.name}', 
+                        price = {product_data.price}, 
+                        place_taken = {product_data.place_taken}, 
+                        warehouse_id = {product_data.warehouse_id}, 
+                        manufacturer_id = {product_data.manufacturer_id}
+                    WHERE name = '{name}'
+                    RETURNING id
+                ),
+                deleted_types AS (
+                    DELETE FROM Product_Types
+                    WHERE product_id = (SELECT id FROM updated_product) -- Use the id from updated_product
+                )
+                INSERT INTO Product_Types (product_id, type_id)
+                SELECT updated_product.id, unnest(ARRAY[{', '.join(str(x) for x in product_data.types)}])
+                FROM updated_product;
+                """

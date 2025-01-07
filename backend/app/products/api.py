@@ -39,3 +39,18 @@ async def delete_product(product_name: str, session: AsyncSession = Depends(db_h
     await Products.execute(query, session)
     await Products.commit(session)
     return {"message": "Product deleted successfully"}
+
+
+@router.get("/{product_name}/edit/data/")
+async def get_data_for_edit(product_name: str, session: AsyncSession = Depends(db_helper.session_dependency)):
+    query = Products.data_for_edit_query(product_name)
+    return await Products.execute(query, session)
+
+
+@router.put("/{product_name}")
+async def edit_product(product_name: str, product_data: ProductCreate,
+                       session: AsyncSession = Depends(db_helper.session_dependency)):
+    query = Products.edit_query(product_name, product_data)
+    await Products.execute(query, session)
+    await Products.commit(session)
+    return {"message": "Product edited successfully"}

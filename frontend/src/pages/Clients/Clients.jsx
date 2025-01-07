@@ -119,7 +119,7 @@ const ClientsPage = () => {
             <div className="flex flex-col items-center justify-center h-screen space-y-4">
                 <p className="text-5xl">😞</p>
                 <p className="text-2xl font-semibold mt-4">Sorry, {error}.</p>
-                <Button onClick={() => navigate(-1)}>Go Back</Button>
+                <Button onClick={() => navigate("/")}>Go Back</Button>
             </div>
         );
     }
@@ -130,7 +130,7 @@ const ClientsPage = () => {
                 <div className="flex justify-between items-center mb-8">
                     <Button
                         variant="outline"
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate("/")}
                         className="flex items-center"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />

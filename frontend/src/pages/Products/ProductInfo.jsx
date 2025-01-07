@@ -93,7 +93,7 @@ const ProductInfo = () => {
         return (
             <div className="flex flex-col items-center justify-center h-screen space-y-4">
                 <p className="text-lg text-red-500">{error}</p>
-                <Button onClick={() => navigate(-1)}>Go Back</Button>
+                <Button onClick={() => navigate("/products")}>Go Back</Button>
             </div>
         );
     }
@@ -115,7 +115,7 @@ const ProductInfo = () => {
                 <div className="flex justify-between items-center mb-6">
                     <Button
                         variant="outline"
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate("/products")}
                         className="flex items-center"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
