@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, {useState, useEffect} from "react";
+import {useNavigate, useParams} from "react-router-dom";
 import axios from "axios";
 import {
     Card,
@@ -7,8 +7,8 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
 import {
     Package,
     ArrowLeft,
@@ -20,7 +20,7 @@ import {
     Plus,
     Save,
 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import {Alert, AlertDescription} from "@/components/ui/alert";
 import {
     Dialog,
     DialogContent,
@@ -31,13 +31,13 @@ import {
 
 const ProductEdit = () => {
     const navigate = useNavigate();
-    const { product_name } = useParams();
+    const {product_name} = useParams();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [typeError, setTypeError] = useState("");
     const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
-    const [newType, setNewType] = useState({ name: "" });
+    const [newType, setNewType] = useState({name: ""});
     const [formData, setFormData] = useState({
         name: "",
         price: "",
@@ -62,7 +62,7 @@ const ProductEdit = () => {
             const response = await axios.get(
                 `http://localhost:8080/api/products/${encodedProductName}/edit/data/`
             );
-            const { product_details, manufacturers, warehouses, types_list } = response.data.result;
+            const {product_details, manufacturers, warehouses, types_list} = response.data.result;
 
             setFormData({
                 name: product_details.product.name,
@@ -87,7 +87,7 @@ const ProductEdit = () => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setFormData((prev) => ({
             ...prev,
             [name]: value,
@@ -106,7 +106,7 @@ const ProductEdit = () => {
             const types = prev.types.includes(typeId)
                 ? prev.types.filter((id) => id !== typeId)
                 : [...prev.types, typeId];
-            return { ...prev, types };
+            return {...prev, types};
         });
     };
 
@@ -130,10 +130,28 @@ const ProductEdit = () => {
         }
     };
 
+    const handleNewTypeSubmit = async (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent event from bubbling up to product form
+        setTypeError("");
+
+        try {
+            const response = await axios.post("http://localhost:8080/api/types/", newType);
+            setFormOptions(prev => ({
+                ...prev,
+                types: [...prev.types, response.data]
+            }));
+            setNewType({name: ""});
+            setIsTypeDialogOpen(false);
+        } catch (err) {
+            setTypeError("Failed to create new type. Please try again.");
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-screen space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500"/>
                 <p className="text-lg text-gray-600">Loading product details...</p>
             </div>
         );
@@ -148,7 +166,7 @@ const ProductEdit = () => {
                         onClick={() => navigate(-1)}
                         className="flex items-center"
                     >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        <ArrowLeft className="h-4 w-4 mr-2"/>
                         Back
                     </Button>
                 </div>
@@ -156,7 +174,7 @@ const ProductEdit = () => {
                 <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle className="flex items-center text-3xl font-bold">
-                            <Package className="h-8 w-8 mr-3 text-blue-500" />
+                            <Package className="h-8 w-8 mr-3 text-blue-500"/>
                             Edit Product
                         </CardTitle>
                     </CardHeader>
@@ -164,7 +182,7 @@ const ProductEdit = () => {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {error && (
                                 <Alert variant="destructive" className="mb-6">
-                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertCircle className="h-4 w-4"/>
                                     <AlertDescription>{error}</AlertDescription>
                                 </Alert>
                             )}
@@ -215,7 +233,7 @@ const ProductEdit = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium mb-2 flex items-center">
-                                        <Factory className="h-4 w-4 mr-2" />
+                                        <Factory className="h-4 w-4 mr-2"/>
                                         Manufacturer
                                     </label>
                                     <select
@@ -235,7 +253,7 @@ const ProductEdit = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium mb-2 flex items-center">
-                                        <Warehouse className="h-4 w-4 mr-2" />
+                                        <Warehouse className="h-4 w-4 mr-2"/>
                                         Warehouse
                                     </label>
                                     <select
@@ -254,10 +272,57 @@ const ProductEdit = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-2 flex items-center">
-                                        <Tag className="h-4 w-4 mr-2" />
-                                        Product Types
-                                    </label>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="text-sm font-medium flex items-center">
+                                            <Tag className="h-4 w-4 mr-2"/>
+                                            Product Types
+                                        </label>
+                                        <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex items-center"
+                                                >
+                                                    <Plus className="h-4 w-4 mr-2"/>
+                                                    Add Type
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent onClick={(e) => e.stopPropagation()}>
+                                                <DialogHeader>
+                                                    <DialogTitle>Add New Product Type</DialogTitle>
+                                                </DialogHeader>
+                                                <div className="py-4">
+                                                    {typeError && (
+                                                        <Alert variant="destructive" className="mb-4">
+                                                            <AlertCircle className="h-4 w-4"/>
+                                                            <AlertDescription>{typeError}</AlertDescription>
+                                                        </Alert>
+                                                    )}
+                                                    <form onSubmit={handleNewTypeSubmit} className="space-y-4">
+                                                        <div>
+                                                            <label className="block text-sm font-medium mb-2">
+                                                                Type Name
+                                                            </label>
+                                                            <Input
+                                                                value={newType.name}
+                                                                onChange={(e) => setNewType({name: e.target.value})}
+                                                                placeholder="Enter type name"
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            type="submit"
+                                                            className="w-full bg-blue-600 hover:bg-blue-700"
+                                                        >
+                                                            Create Type
+                                                        </Button>
+                                                    </form>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                         {formOptions.types.map((type) => (
                                             <label
@@ -284,12 +349,12 @@ const ProductEdit = () => {
                             >
                                 {saving ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                                         Saving Changes...
                                     </>
                                 ) : (
                                     <>
-                                        <Save className="mr-2 h-4 w-4" />
+                                        <Save className="mr-2 h-4 w-4"/>
                                         Save Changes
                                     </>
                                 )}
