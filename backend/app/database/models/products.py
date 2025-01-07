@@ -134,3 +134,10 @@ class Products(Base):
                 SELECT new_product.id, unnest(ARRAY[{', '.join(str(x) for x in product_data.types)}])
                 FROM new_product;
         """
+
+    @classmethod
+    def delete_query(cls, name):
+        return f"""
+            DELETE FROM Products
+            WHERE name = '{name}';
+        """

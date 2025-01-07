@@ -18,8 +18,20 @@ import {
     ArrowLeft,
     Tag,
     ShoppingCart,
-    Loader2
+    Loader2,
+    Pencil,
+    Trash2,
 } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ProductInfo = () => {
     const navigate = useNavigate();
@@ -27,6 +39,8 @@ const ProductInfo = () => {
     const [productData, setProductData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     useEffect(() => {
         if (!product_name) return;
@@ -48,6 +62,23 @@ const ProductInfo = () => {
                 setLoading(false);
             });
     }, [product_name]);
+
+    const handleEdit = () => {
+        navigate(`/products/edit/${product_name}`);
+    };
+
+    const handleDelete = async () => {
+        setDeleteLoading(true);
+        try {
+            await axios.delete(`http://localhost:8080/api/products/${encodeURIComponent(product_name)}`);
+            navigate('/products');
+        } catch (error) {
+            console.error("Error deleting product:", error);
+            setError("Failed to delete product. Please try again later.");
+            setShowDeleteDialog(false);
+        }
+        setDeleteLoading(false);
+    };
 
     if (loading) {
         return (
@@ -81,17 +112,38 @@ const ProductInfo = () => {
     return (
         <div className="min-h-screen bg-gray-50 p-8">
             <div className="max-w-4xl mx-auto space-y-6">
-                <Button
-                    variant="outline"
-                    onClick={() => navigate(-1)}
-                    className="mb-6"
-                >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
-                </Button>
+                <div className="flex justify-between items-center mb-6">
+                    <Button
+                        variant="outline"
+                        onClick={() => navigate(-1)}
+                        className="flex items-center"
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back
+                    </Button>
+                    <div className="flex space-x-3">
+                        <Button
+                            variant="outline"
+                            onClick={handleEdit}
+                            className="flex items-center"
+                        >
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => setShowDeleteDialog(true)}
+                            className="flex items-center"
+                        >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                        </Button>
+                    </div>
+                </div>
 
                 {/* Product Overview Card */}
                 <Card className="shadow-lg">
+                    {/* Rest of the component remains the same */}
                     <CardHeader className="border-b bg-gray-50">
                         <div className="flex items-center space-x-2">
                             <Package className="h-6 w-6 text-blue-500" />
@@ -192,6 +244,35 @@ const ProductInfo = () => {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete {product.name}? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                            disabled={deleteLoading}
+                        >
+                            {deleteLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                "Delete"
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

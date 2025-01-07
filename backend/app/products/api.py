@@ -31,3 +31,11 @@ async def create_product(product_data: ProductCreate, session: AsyncSession = De
     await Products.execute(query, session)
     await Products.commit(session)
     return {"message": "Product created successfully"}
+
+
+@router.delete("/{product_name}")
+async def delete_product(product_name: str, session: AsyncSession = Depends(db_helper.session_dependency)):
+    query = Products.delete_query(product_name)
+    await Products.execute(query, session)
+    await Products.commit(session)
+    return {"message": "Product deleted successfully"}
