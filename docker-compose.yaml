@@ -36,19 +36,6 @@ services:
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    depends_on:
-      - postgres
-    expose:
-      - ${PGADMIN_PORT_INTERNAL}
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-      PGADMIN_LISTEN_PORT: ${PGADMIN_PORT_INTERNAL}
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-
   frontend:
     build:
         context: ./frontend
