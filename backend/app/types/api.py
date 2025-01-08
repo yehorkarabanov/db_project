@@ -8,7 +8,7 @@ router = APIRouter(prefix="/types", tags=["types"])
 
 
 @router.post("/")
-async def create_product(type_data: TypeCreate, session: AsyncSession = Depends(db_helper.session_dependency)):
+async def create_type(type_data: TypeCreate, session: AsyncSession = Depends(db_helper.session_dependency)):
     query = Types.create_query(type_data)
     res = await Types.execute(query, session)
     await Types.commit(session)

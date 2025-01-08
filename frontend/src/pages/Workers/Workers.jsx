@@ -1,137 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Button } from "@/components/ui/button.tsx";
+    Table,
+    TableBody,
+    TableCell,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import {
     Users,
     Search,
     ArrowLeft,
-    Plus,
     Loader2,
+    ArrowUpDown,
     Building,
     DollarSign,
-    PackageCheck,
+    Package,
+    Plus,
+    Pencil,
+    Trash2,
     ChevronDown,
-    ChevronRight,
-    UserPlus
+    ChevronRight
 } from "lucide-react";
-
-const WorkerCard = ({ worker, level, expanded, onToggle, searchTerm }) => {
-    const isHighlighted = searchTerm &&
-        worker.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return (
-        <Card className={`
-            my-2 transition-all duration-200
-            ${isHighlighted ? 'ring-2 ring-blue-500 shadow-lg' : 'shadow-md hover:shadow-lg'}
-            ${level > 0 ? 'ml-8' : ''}
-        `}>
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        {worker.subordinates?.length > 0 && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="p-0 h-6 w-6"
-                                onClick={onToggle}
-                            >
-                                {expanded ?
-                                    <ChevronDown className="h-5 w-5" /> :
-                                    <ChevronRight className="h-5 w-5" />
-                                }
-                            </Button>
-                        )}
-                        <CardTitle className="text-lg">{worker.name}</CardTitle>
-                    </div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8"
-                        onClick={() => {/* Add new subordinate logic */}}
-                    >
-                        <UserPlus className="h-4 w-4" />
-                    </Button>
-                </div>
-                <CardDescription>
-                    Reports to {level === 0 ? 'No One (Top Level)' : 'Superior'}
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <div>
-                            <p className="text-sm text-gray-500">Salary</p>
-                            <p className="font-medium">${worker.salary.toLocaleString()}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <PackageCheck className="h-4 w-4 text-blue-600" />
-                        <div>
-                            <p className="text-sm text-gray-500">Orders</p>
-                            <p className="font-medium">{worker.orders_count}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-purple-600" />
-                        <div>
-                            <p className="text-sm text-gray-500">Warehouse</p>
-                            <p className="font-medium">#{worker.warehouse_id}</p>
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
-};
-
-const WorkerTree = ({ workers, level = 0, searchTerm }) => {
-    const [expandedWorkers, setExpandedWorkers] = useState(new Set());
-
-    const toggleWorker = (workerId) => {
-        setExpandedWorkers(prev => {
-            const next = new Set(prev);
-            if (next.has(workerId)) {
-                next.delete(workerId);
-            } else {
-                next.add(workerId);
-            }
-            return next;
-        });
-    };
-
-    return (
-        <div className="space-y-2">
-            {workers.map((worker) => (
-                <div key={worker.id}>
-                    <WorkerCard
-                        worker={worker}
-                        level={level}
-                        expanded={expandedWorkers.has(worker.id)}
-                        onToggle={() => toggleWorker(worker.id)}
-                        searchTerm={searchTerm}
-                    />
-                    {expandedWorkers.has(worker.id) && worker.subordinates && (
-                        <WorkerTree
-                            workers={worker.subordinates}
-                            level={level + 1}
-                            searchTerm={searchTerm}
-                        />
-                    )}
-                </div>
-            ))}
-        </div>
-    );
-};
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const WorkersPage = () => {
     const navigate = useNavigate();
@@ -139,28 +48,160 @@ const WorkersPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+    const [expandedWorkers, setExpandedWorkers] = useState(new Set());
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [workerToDelete, setWorkerToDelete] = useState(null);
+    const [stats, setStats] = useState({
+        totalWorkers: 0,
+        totalSalaries: 0,
+        totalOrders: 0,
+        avgSalary: 0
+    });
 
     useEffect(() => {
+        fetchWorkers();
+    }, []);
+
+    const fetchWorkers = () => {
         setLoading(true);
-        axios.get('http://localhost:8080/api/workers')
+        axios.get("http://localhost:8080/api/workers")
             .then((response) => {
-                setWorkers(response.data.json_build_object.workers);
-                setError(null);
+                if (response.data.json_build_object.workers) {
+                    const workersData = response.data.json_build_object.workers;
+                    setWorkers(workersData);
+                    calculateStats(workersData);
+                } else {
+                    setError("No workers data found");
+                }
             })
-            .catch((error) => {
-                console.error('Error fetching data:', error);
-                setError("Failed to load workers data. Please try again later.");
+            .catch((err) => {
+                setError(err.message);
             })
             .finally(() => {
                 setLoading(false);
             });
-    }, []);
+    };
+
+    const calculateStats = (workersData) => {
+        const flatWorkers = getAllWorkers(workersData);
+        const stats = {
+            totalWorkers: flatWorkers.length,
+            totalSalaries: flatWorkers.reduce((sum, worker) => sum + worker.salary, 0),
+            totalOrders: flatWorkers.reduce((sum, worker) => sum + worker.orders_count, 0),
+            avgSalary: Math.round(flatWorkers.reduce((sum, worker) => sum + worker.salary, 0) / flatWorkers.length)
+        };
+        setStats(stats);
+    };
+
+    const getAllWorkers = (workers, result = []) => {
+        workers.forEach(worker => {
+            result.push(worker);
+            if (worker.subordinates?.length) {
+                getAllWorkers(worker.subordinates, result);
+            }
+        });
+        return result;
+    };
+
+    const handleDeleteClick = (worker) => {
+        setWorkerToDelete(worker);
+        setShowDeleteDialog(true);
+    };
+
+    const handleDelete = async () => {
+        if (!workerToDelete) return;
+
+        setDeleteLoading(true);
+        try {
+            await axios.delete(`http://localhost:8080/api/workers/${workerToDelete.id}`);
+            fetchWorkers();
+            setShowDeleteDialog(false);
+        } catch (error) {
+            console.error("Error deleting worker:", error);
+            setError("Failed to delete worker. Please try again later.");
+        } finally {
+            setDeleteLoading(false);
+            setWorkerToDelete(null);
+        }
+    };
+
+    const toggleExpand = (workerId) => {
+        const newExpanded = new Set(expandedWorkers);
+        if (newExpanded.has(workerId)) {
+            newExpanded.delete(workerId);
+        } else {
+            newExpanded.add(workerId);
+        }
+        setExpandedWorkers(newExpanded);
+    };
+
+    const handleSort = (key) => {
+        const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        setSortConfig({ key, direction });
+    };
+
+    const renderWorkerRow = (worker, level = 0) => {
+        const hasSubordinates = worker.subordinates?.length > 0;
+        const isExpanded = expandedWorkers.has(worker.id);
+
+        return (
+            <>
+                <TableRow key={worker.id} className="hover:bg-gray-50">
+                    <TableCell>
+                        <div className="flex items-center" style={{ paddingLeft: `${level * 20}px` }}>
+                            {hasSubordinates && (
+                                <button
+                                    onClick={() => toggleExpand(worker.id)}
+                                    className="mr-2 focus:outline-none"
+                                >
+                                    {isExpanded ? (
+                                        <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                        <ChevronRight className="h-4 w-4" />
+                                    )}
+                                </button>
+                            )}
+                            {worker.id}
+                        </div>
+                    </TableCell>
+                    <TableCell>{worker.name}</TableCell>
+                    <TableCell>${worker.salary}</TableCell>
+                    <TableCell>{worker.orders_count}</TableCell>
+                    <TableCell>{worker.warehouse_id}</TableCell>
+                    <TableCell>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate(`/workers/edit/${worker.id}`)}
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600 hover:text-red-800"
+                                onClick={() => handleDeleteClick(worker)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </TableCell>
+                </TableRow>
+                {hasSubordinates && isExpanded && worker.subordinates.map(subordinate =>
+                    renderWorkerRow(subordinate, level + 1)
+                )}
+            </>
+        );
+    };
 
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-screen space-y-4">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                <p className="text-lg text-gray-600">Loading organization structure...</p>
+                <p className="text-lg text-gray-600">Loading workers data...</p>
             </div>
         );
     }
@@ -168,15 +209,20 @@ const WorkersPage = () => {
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center h-screen space-y-4">
-                <p className="text-lg text-red-500">{error}</p>
-                <Button onClick={() => navigate(-1)}>Go Back</Button>
+                <p className="text-5xl">😞</p>
+                <p className="text-2xl font-semibold mt-4">Sorry, {error}.</p>
+                <Button onClick={() => navigate("/workers/")}>Go Back</Button>
             </div>
         );
     }
 
+    const filteredWorkers = workers.filter(worker =>
+        worker.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="min-h-screen bg-gray-50 p-8">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-7xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
                     <Button
                         variant="outline"
@@ -187,22 +233,21 @@ const WorkersPage = () => {
                         Back
                     </Button>
                     <Button
-                        onClick={() => {navigate('/workers/new')}}
                         className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => navigate('/workers/new')}
                     >
                         <Plus className="h-4 w-4 mr-2" />
-                        Add New Worker
+                        Add Worker
                     </Button>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-                    <h1 className="text-3xl font-bold mb-6 flex items-center">
-                        <Users className="h-8 w-8 mr-3 text-blue-500" />
-                        Organization Structure
-                    </h1>
-
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="relative flex-1">
+                    <div className="flex items-center justify-between mb-6">
+                        <h1 className="text-3xl font-bold flex items-center">
+                            <Users className="h-8 w-8 mr-3 text-blue-500" />
+                            Workers
+                        </h1>
+                        <div className="relative w-64">
                             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input
                                 placeholder="Search workers..."
@@ -213,8 +258,119 @@ const WorkersPage = () => {
                         </div>
                     </div>
 
-                    <WorkerTree workers={workers} searchTerm={searchTerm} />
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm text-gray-500">Total Workers</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-2xl font-bold">{stats.totalWorkers}</p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm text-gray-500">Total Salaries</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-2xl font-bold">${stats.totalSalaries}</p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm text-gray-500">Average Salary</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-2xl font-bold">${stats.avgSalary}</p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm text-gray-500">Total Orders</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-2xl font-bold">{stats.totalOrders}</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="rounded-lg border shadow-sm">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableCell onClick={() => handleSort('id')} className="cursor-pointer">
+                                        <div className="flex items-center">
+                                            ID
+                                            <ArrowUpDown className="ml-1 h-4 w-4" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell onClick={() => handleSort('name')} className="cursor-pointer">
+                                        <div className="flex items-center">
+                                            Name
+                                            <ArrowUpDown className="ml-1 h-4 w-4" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell onClick={() => handleSort('salary')} className="cursor-pointer">
+                                        <div className="flex items-center">
+                                            <DollarSign className="mr-2 h-4 w-4" />
+                                            Salary
+                                            <ArrowUpDown className="ml-1 h-4 w-4" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell onClick={() => handleSort('orders_count')} className="cursor-pointer">
+                                        <div className="flex items-center">
+                                            <Package className="mr-2 h-4 w-4" />
+                                            Orders
+                                            <ArrowUpDown className="ml-1 h-4 w-4" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell onClick={() => handleSort('warehouse_id')} className="cursor-pointer">
+                                        <div className="flex items-center">
+                                            <Building className="mr-2 h-4 w-4" />
+                                            Warehouse
+                                            <ArrowUpDown className="ml-1 h-4 w-4" />
+                                        </div>
+                                    </TableCell>
+                    <TableCell>Actions</TableCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {filteredWorkers.map(worker => renderWorkerRow(worker))}
+            </TableBody>
+        </Table>
+    </div>
+</div>
+
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Worker</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete {workerToDelete?.name}?
+                                {workerToDelete?.subordinates?.length > 0 && (
+                                    " This will also affect their subordinates. "
+                                )}
+                                This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleDelete}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                                disabled={deleteLoading}
+                            >
+                                {deleteLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    "Delete"
+                                )}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </div>
     );
