@@ -48,7 +48,6 @@ const WorkersPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [expandedWorkers, setExpandedWorkers] = useState(new Set());
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
@@ -56,8 +55,8 @@ const WorkersPage = () => {
     const [stats, setStats] = useState({
         totalWorkers: 0,
         totalSalaries: 0,
+        avgSalary: 0,
         totalOrders: 0,
-        avgSalary: 0
     });
 
     useEffect(() => {
@@ -68,13 +67,9 @@ const WorkersPage = () => {
         setLoading(true);
         axios.get("http://localhost:8080/api/workers")
             .then((response) => {
-                if (response.data.json_build_object.workers) {
-                    const workersData = response.data.json_build_object.workers;
-                    setWorkers(workersData);
-                    calculateStats(workersData);
-                } else {
-                    setError("No workers data found");
-                }
+                const workersData = response.data;
+                setWorkers(workersData);
+                calculateStats(workersData);
             })
             .catch((err) => {
                 setError(err.message);
@@ -85,46 +80,35 @@ const WorkersPage = () => {
     };
 
     const calculateStats = (workersData) => {
-        const flatWorkers = getAllWorkers(workersData);
-        const stats = {
-            totalWorkers: flatWorkers.length,
-            totalSalaries: flatWorkers.reduce((sum, worker) => sum + worker.salary, 0),
-            totalOrders: flatWorkers.reduce((sum, worker) => sum + worker.orders_count, 0),
-            avgSalary: Math.round(flatWorkers.reduce((sum, worker) => sum + worker.salary, 0) / flatWorkers.length)
-        };
-        setStats(stats);
+        const totalWorkers = workersData.length;
+        const totalSalaries = workersData.reduce((sum, worker) => sum + worker.salary, 0);
+        const avgSalary = totalWorkers ? Math.round(totalSalaries / totalWorkers) : 0;
+        const totalOrders = workersData.reduce((sum, worker) => sum + worker.orders_count, 0);
+
+        setStats({ totalWorkers, totalSalaries, avgSalary, totalOrders });
     };
 
-    const getAllWorkers = (workers, result = []) => {
+    const buildHierarchy = (workers) => {
+        const workerMap = new Map();
+        const rootWorkers = [];
+
         workers.forEach(worker => {
-            result.push(worker);
-            if (worker.subordinates?.length) {
-                getAllWorkers(worker.subordinates, result);
+            worker.subordinates = [];
+            workerMap.set(worker.name, worker);
+        });
+
+        workers.forEach(worker => {
+            if (worker.supervisor) {
+                const supervisor = workerMap.get(worker.supervisor);
+                if (supervisor) {
+                    supervisor.subordinates.push(worker);
+                }
+            } else {
+                rootWorkers.push(worker);
             }
         });
-        return result;
-    };
 
-    const handleDeleteClick = (worker) => {
-        setWorkerToDelete(worker);
-        setShowDeleteDialog(true);
-    };
-
-    const handleDelete = async () => {
-        if (!workerToDelete) return;
-
-        setDeleteLoading(true);
-        try {
-            await axios.delete(`http://localhost:8080/api/workers/${workerToDelete.id}`);
-            fetchWorkers();
-            setShowDeleteDialog(false);
-        } catch (error) {
-            console.error("Error deleting worker:", error);
-            setError("Failed to delete worker. Please try again later.");
-        } finally {
-            setDeleteLoading(false);
-            setWorkerToDelete(null);
-        }
+        return rootWorkers;
     };
 
     const toggleExpand = (workerId) => {
@@ -137,18 +121,13 @@ const WorkersPage = () => {
         setExpandedWorkers(newExpanded);
     };
 
-    const handleSort = (key) => {
-        const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
-        setSortConfig({ key, direction });
-    };
-
     const renderWorkerRow = (worker, level = 0) => {
-        const hasSubordinates = worker.subordinates?.length > 0;
+        const hasSubordinates = worker.subordinates.length > 0;
         const isExpanded = expandedWorkers.has(worker.id);
 
         return (
-            <>
-                <TableRow key={worker.id} className="hover:bg-gray-50">
+            <React.Fragment key={worker.id}>
+                <TableRow className="hover:bg-gray-50">
                     <TableCell>
                         <div className="flex items-center" style={{ paddingLeft: `${level * 20}px` }}>
                             {hasSubordinates && (
@@ -193,8 +172,30 @@ const WorkersPage = () => {
                 {hasSubordinates && isExpanded && worker.subordinates.map(subordinate =>
                     renderWorkerRow(subordinate, level + 1)
                 )}
-            </>
+            </React.Fragment>
         );
+    };
+
+    const handleDeleteClick = (worker) => {
+        setWorkerToDelete(worker);
+        setShowDeleteDialog(true);
+    };
+
+    const handleDelete = async () => {
+        if (!workerToDelete) return;
+
+        setDeleteLoading(true);
+        try {
+            await axios.delete(`http://localhost:8080/api/workers/${workerToDelete.id}`);
+            fetchWorkers();
+            setShowDeleteDialog(false);
+        } catch (error) {
+            console.error("Error deleting worker:", error);
+            setError("Failed to delete worker. Please try again later.");
+        } finally {
+            setDeleteLoading(false);
+            setWorkerToDelete(null);
+        }
     };
 
     if (loading) {
@@ -216,7 +217,8 @@ const WorkersPage = () => {
         );
     }
 
-    const filteredWorkers = workers.filter(worker =>
+    const rootWorkers = buildHierarchy(workers);
+    const filteredWorkers = rootWorkers.filter(worker =>
         worker.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -297,48 +299,20 @@ const WorkersPage = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableCell onClick={() => handleSort('id')} className="cursor-pointer">
-                                        <div className="flex items-center">
-                                            ID
-                                            <ArrowUpDown className="ml-1 h-4 w-4" />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell onClick={() => handleSort('name')} className="cursor-pointer">
-                                        <div className="flex items-center">
-                                            Name
-                                            <ArrowUpDown className="ml-1 h-4 w-4" />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell onClick={() => handleSort('salary')} className="cursor-pointer">
-                                        <div className="flex items-center">
-                                            <DollarSign className="mr-2 h-4 w-4" />
-                                            Salary
-                                            <ArrowUpDown className="ml-1 h-4 w-4" />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell onClick={() => handleSort('orders_count')} className="cursor-pointer">
-                                        <div className="flex items-center">
-                                            <Package className="mr-2 h-4 w-4" />
-                                            Orders
-                                            <ArrowUpDown className="ml-1 h-4 w-4" />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell onClick={() => handleSort('warehouse_id')} className="cursor-pointer">
-                                        <div className="flex items-center">
-                                            <Building className="mr-2 h-4 w-4" />
-                                            Warehouse
-                                            <ArrowUpDown className="ml-1 h-4 w-4" />
-                                        </div>
-                                    </TableCell>
-                    <TableCell>Actions</TableCell>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {filteredWorkers.map(worker => renderWorkerRow(worker))}
-            </TableBody>
-        </Table>
-    </div>
-</div>
+                                    <TableCell>ID</TableCell>
+                                    <TableCell>Name</TableCell>
+                                    <TableCell>Salary</TableCell>
+                                    <TableCell>Orders</TableCell>
+                                    <TableCell>Warehouse</TableCell>
+                                    <TableCell>Actions</TableCell>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredWorkers.map(worker => renderWorkerRow(worker))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </div>
 
                 <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                     <AlertDialogContent>
@@ -346,9 +320,6 @@ const WorkersPage = () => {
                             <AlertDialogTitle>Delete Worker</AlertDialogTitle>
                             <AlertDialogDescription>
                                 Are you sure you want to delete {workerToDelete?.name}?
-                                {workerToDelete?.subordinates?.length > 0 && (
-                                    " This will also affect their subordinates. "
-                                )}
                                 This action cannot be undone.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
