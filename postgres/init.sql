@@ -86,3 +86,74 @@ CREATE INDEX idx_products_name ON Products (name);
 CREATE INDEX idx_orders_client_id ON Orders (client_id);
 CREATE INDEX idx_workers_warehouse_id ON Workers (warehouse_id);
 CREATE INDEX idx_product_orders_order_id ON Product_Orders (order_id);
+
+-- Function to reassign orders and update worker hierarchy when a worker is deleted
+CREATE OR REPLACE FUNCTION trigger_on_worker_deletion()
+RETURNS TRIGGER AS $$
+DECLARE
+    supervisor_exists BOOLEAN;
+    new_worker_id INT;
+BEGIN
+    -- First handle subordinates
+    IF EXISTS (SELECT 1 FROM Workers WHERE supervisor_id = OLD.id) THEN
+        IF OLD.supervisor_id IS NOT NULL THEN
+            -- Transfer subordinates to the deleted worker's supervisor
+            UPDATE Workers
+            SET supervisor_id = OLD.supervisor_id
+            WHERE supervisor_id = OLD.id;
+        ELSE
+            -- If no supervisor exists, remove supervisor reference
+            UPDATE Workers
+            SET supervisor_id = NULL
+            WHERE supervisor_id = OLD.id;
+        END IF;
+    END IF;
+
+    -- Then handle orders reassignment
+    IF EXISTS (SELECT 1 FROM Orders WHERE worker_id = OLD.id) THEN
+        -- Check if supervisor exists
+        SELECT EXISTS (
+            SELECT 1 FROM Workers WHERE id = OLD.supervisor_id
+        ) INTO supervisor_exists;
+
+        IF supervisor_exists THEN
+            -- Assign to supervisor
+            UPDATE Orders
+            SET worker_id = OLD.supervisor_id
+            WHERE worker_id = OLD.id;
+        ELSE
+            -- Try to find another worker in the same warehouse
+            SELECT id INTO new_worker_id
+            FROM Workers
+            WHERE warehouse_id = OLD.warehouse_id
+                AND id != OLD.id
+                AND id != OLD.supervisor_id
+            LIMIT 1;
+
+            -- If no worker in same warehouse, find any worker without supervisor
+            IF new_worker_id IS NULL THEN
+                SELECT id INTO new_worker_id
+                FROM Workers
+                WHERE supervisor_id IS NULL
+                    AND id != OLD.id
+                LIMIT 1;
+            END IF;
+
+            -- Update orders with new worker if found
+            IF new_worker_id IS NOT NULL THEN
+                UPDATE Orders
+                SET worker_id = new_worker_id
+                WHERE worker_id = OLD.id;
+            END IF;
+        END IF;
+    END IF;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger that fires before worker deletion
+CREATE OR REPLACE TRIGGER before_worker_deletion
+BEFORE DELETE ON Workers
+FOR EACH ROW
+EXECUTE FUNCTION trigger_on_worker_deletion();
