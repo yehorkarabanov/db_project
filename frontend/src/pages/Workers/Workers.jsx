@@ -212,7 +212,7 @@ const WorkersPage = () => {
             <div className="flex flex-col items-center justify-center h-screen space-y-4">
                 <p className="text-5xl">😞</p>
                 <p className="text-2xl font-semibold mt-4">Sorry, {error}.</p>
-                <Button onClick={() => navigate("/workers/")}>Go Back</Button>
+                <Button onClick={() => navigate(0)}>Go Back</Button>
             </div>
         );
     }
