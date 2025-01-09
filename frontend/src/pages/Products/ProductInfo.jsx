@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, {useState, useEffect} from "react";
+import {useNavigate, useParams} from "react-router-dom";
 import axios from "axios";
 import {
     Card,
@@ -8,8 +8,8 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import {Separator} from "@/components/ui/separator.tsx";
+import {Button} from "@/components/ui/button.tsx";
 import {
     Package,
     Factory,
@@ -20,7 +20,7 @@ import {
     ShoppingCart,
     Loader2,
     Pencil,
-    Trash2,
+    Trash2, XCircle,
 } from "lucide-react";
 import {
     AlertDialog,
@@ -35,7 +35,7 @@ import {
 
 const ProductInfo = () => {
     const navigate = useNavigate();
-    const { product_name } = useParams();
+    const {product_name} = useParams();
     const [productData, setProductData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -51,6 +51,11 @@ const ProductInfo = () => {
         axios
             .get(`http://localhost:8080/api/products/${encodedProductName}`)
             .then((response) => {
+                if (!response.data.product_details) {
+                    console.error("Product not found");
+                    setError("Product not found. Please try again later.");
+                    return;
+                }
                 setProductData(response.data.product_details);
                 setError(null);
             })
@@ -83,7 +88,7 @@ const ProductInfo = () => {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-screen space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500"/>
                 <p className="text-lg text-gray-600">Loading product details...</p>
             </div>
         );
@@ -91,9 +96,38 @@ const ProductInfo = () => {
 
     if (error) {
         return (
-            <div className="flex flex-col items-center justify-center h-screen space-y-4">
-                <p className="text-lg text-red-500">{error}</p>
-                <Button onClick={() => navigate("/products")}>Go Back</Button>
+            <div className="min-h-screen bg-gray-50 p-8">
+                <div className="max-w-md mx-auto">
+                    <Card className="shadow-lg">
+                        <CardContent className="pt-6">
+                            <div className="flex flex-col items-center text-center space-y-4">
+                                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                                    <XCircle className="h-6 w-6 text-red-600"/>
+                                </div>
+                                <div className="space-y-2">
+                                    <h3 className="text-lg font-semibold text-gray-900">Error Loading Product</h3>
+                                    <p className="text-gray-500">{error}</p>
+                                </div>
+                                <div className="flex space-x-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => navigate(0)}
+                                        className="flex items-center"
+                                    >
+                                        Try Again
+                                    </Button>
+                                    <Button
+                                        onClick={() => navigate("/products")}
+                                        className="flex items-center"
+                                    >
+                                        <ArrowLeft className="h-4 w-4 mr-2"/>
+                                        Back to Products
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         );
     }
@@ -118,7 +152,7 @@ const ProductInfo = () => {
                         onClick={() => navigate("/products")}
                         className="flex items-center"
                     >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        <ArrowLeft className="h-4 w-4 mr-2"/>
                         Back
                     </Button>
                     <div className="flex space-x-3">
@@ -127,7 +161,7 @@ const ProductInfo = () => {
                             onClick={handleEdit}
                             className="flex items-center"
                         >
-                            <Pencil className="h-4 w-4 mr-2" />
+                            <Pencil className="h-4 w-4 mr-2"/>
                             Edit
                         </Button>
                         <Button
@@ -135,7 +169,7 @@ const ProductInfo = () => {
                             onClick={() => setShowDeleteDialog(true)}
                             className="flex items-center"
                         >
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2 className="h-4 w-4 mr-2"/>
                             Delete
                         </Button>
                     </div>
@@ -146,11 +180,11 @@ const ProductInfo = () => {
                     {/* Rest of the component remains the same */}
                     <CardHeader className="border-b bg-gray-50">
                         <div className="flex items-center space-x-2">
-                            <Package className="h-6 w-6 text-blue-500" />
+                            <Package className="h-6 w-6 text-blue-500"/>
                             <div>
                                 <CardTitle className="text-2xl">{product.name}</CardTitle>
                                 <CardDescription className="flex items-center mt-1">
-                                    <Factory className="h-4 w-4 mr-1" />
+                                    <Factory className="h-4 w-4 mr-1"/>
                                     {manufacturer.name} ({manufacturer.country})
                                 </CardDescription>
                             </div>
@@ -164,7 +198,7 @@ const ProductInfo = () => {
                                 </div>
                                 <div className="mt-4 space-y-2">
                                     <div className="flex items-center space-x-2">
-                                        <Tag className="h-4 w-4 text-gray-500" />
+                                        <Tag className="h-4 w-4 text-gray-500"/>
                                         <span className="text-gray-600">Types: </span>
                                         <div className="flex flex-wrap gap-2">
                                             {types.map((type) => (
@@ -178,7 +212,7 @@ const ProductInfo = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center space-x-2">
-                                        <ShoppingCart className="h-4 w-4 text-gray-500" />
+                                        <ShoppingCart className="h-4 w-4 text-gray-500"/>
                                         <span className="text-gray-600">Total Ordered: </span>
                                         <span className="font-semibold">{total_ordered}</span>
                                     </div>
@@ -187,7 +221,7 @@ const ProductInfo = () => {
 
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <div className="flex items-center mb-2">
-                                    <Warehouse className="h-5 w-5 text-gray-500 mr-2" />
+                                    <Warehouse className="h-5 w-5 text-gray-500 mr-2"/>
                                     <h3 className="font-semibold">Warehouse Details</h3>
                                 </div>
                                 <div className="space-y-2">
@@ -207,7 +241,7 @@ const ProductInfo = () => {
                 <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle className="flex items-center">
-                            <Calendar className="h-5 w-5 mr-2 text-blue-500" />
+                            <Calendar className="h-5 w-5 mr-2 text-blue-500"/>
                             Order History
                         </CardTitle>
                     </CardHeader>
@@ -263,7 +297,7 @@ const ProductInfo = () => {
                         >
                             {deleteLoading ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                                     Deleting...
                                 </>
                             ) : (

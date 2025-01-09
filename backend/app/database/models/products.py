@@ -218,26 +218,26 @@ class Products(Base):
     @classmethod
     def edit_query(cls, name, product_data):
         return f"""
-        DO $$
-        DECLARE
-            updated_product_id INT;
-        BEGIN
-            -- Update the product and retrieve the updated product ID
-            UPDATE Products
-            SET name = '{product_data.name}', 
-                price = {product_data.price}, 
-                place_taken = {product_data.place_taken}, 
-                warehouse_id = {product_data.warehouse_id}, 
-                manufacturer_id = {product_data.manufacturer_id}
-            WHERE name = '{name}'
-            RETURNING id INTO updated_product_id;
-
-            -- Delete existing product types for the updated product
-            DELETE FROM Product_Types
-            WHERE product_id = updated_product_id;
-
-            -- Insert new product types
-            INSERT INTO Product_Types (product_id, type_id)
-            SELECT updated_product_id, unnest(ARRAY[{', '.join(str(x) for x in product_data.types)}]);
-        END $$;
+                    DO $$
+                    DECLARE
+                        updated_product_id INT;
+                    BEGIN
+                        -- Update the product and retrieve the updated product ID
+                        UPDATE Products
+                        SET name = '{product_data.name}', 
+                            price = {product_data.price}, 
+                            place_taken = {product_data.place_taken}, 
+                            warehouse_id = {product_data.warehouse_id}, 
+                            manufacturer_id = {product_data.manufacturer_id}
+                        WHERE name = '{name}'
+                        RETURNING id INTO updated_product_id;
+            
+                        -- Delete existing product types for the updated product
+                        DELETE FROM Product_Types
+                        WHERE product_id = updated_product_id;
+            
+                        -- Insert new product types
+                        INSERT INTO Product_Types (product_id, type_id)
+                        SELECT updated_product_id, unnest(ARRAY[{', '.join(str(x) for x in product_data.types)}]);
+                    END $$;
                 """
