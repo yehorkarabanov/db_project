@@ -10,7 +10,6 @@ class Orders(Base):
     def get_orders_by_mail(cls, email):
         return f"""
                 WITH OrderProducts AS (
-                    -- First aggregate products with their manufacturers and types
                     SELECT 
                         po.order_id,
                         JSON_AGG(
@@ -45,7 +44,6 @@ class Orders(Base):
                         po.order_id
                 ),
                 OrderDetails AS (
-                    -- Then aggregate orders with their products and worker info
                     SELECT 
                         o.client_id,
                         JSON_AGG(
